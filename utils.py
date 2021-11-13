@@ -1,13 +1,16 @@
 import numpy as np
 from constant import *
+import time
+
 
 class data_package:
     def __init__(self, payload, loadtype):
         self.load = payload
         self.type = loadtype
-    
+
+
 class box:
-    def __init__(self, box:list):
+    def __init__(self, box: list):
         assert np.size(box) == 4
         self.ymin = box[0]
         self.xmin = box[1]
@@ -29,38 +32,50 @@ class I_U_cal:
         a = I_U_cal.inter(b1, b2)
         return a1+a2-a
 
-    def IOU(b1:box,b2:box)->float:
-        return I_U_cal.inter(b1,b2)/I_U_cal.union(b1,b2)
+    def IOU(b1: box, b2: box) -> float:
+        return I_U_cal.inter(b1, b2)/I_U_cal.union(b1, b2)
+
 
 class warning_gen:
-    def __init__(self, iou_thre:int)->None:
+    def __init__(self, iou_thre: int) -> None:
         self.opwindow = None
         self.move = None
         self.detected = False
         self.iou = iou_thre
 
-    def update_window(self, opwindow:list)->None:
+    def update_window(self, opwindow: list) -> None:
         self.opwindow = opwindow
 
-    def update_move(self, move:list)->None:
+    def update_move(self, move: list) -> None:
         if move is not None:
             self.detected = True
         self.move = move
 
-    def close_window(self)->bool:
+    def close_window(self) -> bool:
         if self.opwindow is None or self.move is None:
             return False
         for w in self.opwindow:
             bw = box(w)
             for m in self.move:
                 bm = box(m)
-                iou = I_U_cal.IOU(bw,bm)
+                iou = I_U_cal.IOU(bw, bm)
                 if iou > self.iou:
                     return True
         return False
 
-    def is_disapr(self)->bool:
+    def is_disapr(self) -> bool:
         if self.detected and self.move is None:
             self.detected = False
             return True
         return False
+
+
+class Counter:
+    def __init__(self) -> None:
+        self.timer = {}
+
+    def start(self, label: str) -> None:
+        self.timer[label] = time.perf_counter()
+
+    def end(self, label: str, useFPS: bool = True) -> str:
+        return '{}FPS:{}'.format(label, 1/(time.perf_counter()-self.timer[label])) if useFPS else '{}timing:{}'.format(label, time.perf_counter()-self.timer[label])
