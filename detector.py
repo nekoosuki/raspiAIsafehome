@@ -9,6 +9,7 @@ from constant import *
 
 class objDetector:
     def __init__(self, model, w, h, conf_thre):
+        "    使用目标检测模型检测窗户\n\n    参数\n    ----------\n    model : 模型路径\n\n    w : 输入帧宽度\n\n    h : 输入帧高度\n\n    conf_thre : 置信度阈值，只有置信度大于该阈值预测结果的才会被输出\n"
         self.interpreter = Interpreter(model_path=model)
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
@@ -19,6 +20,7 @@ class objDetector:
         self.conf = conf_thre
 
     def detect(self, frame):
+        "    进行目标检测\n\n    参数\n    ----------\n    frame : BGR格式的帧\n\n    返回\n    ----------\n    tuple(box[ymin, xmin, ymax, xmax], class, score)\n"
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.resize(frame, (320, 320))
         input_data = np.expand_dims(frame, axis=0)
@@ -52,12 +54,14 @@ class objDetector:
 
 class movementDetector:
     def __init__(self, frame, min_area=3200):
+        "    使用帧差法检测运动物体\n\n    参数\n    ----------\n    frame : BGR格式的基准帧\n\n    min_area : 运动物体在画面上的最小面积\n\n"
         #f = imutils.resize(frame, width=500)
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         self.comp_frame = cv2.GaussianBlur(f, (21, 21), 0)
         self.min_area = min_area
 
     def detect(self, frame):
+        "    进行运动检测\n\n    参数\n    ----------\n    frame : BGR格式的帧\n\n    返回\n    ----------\n    tuple(帧差别，阈值后帧差别，运动物体box)\n"
         # frame = cv2.resize(frame, (320,320))
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
@@ -80,6 +84,7 @@ class movementDetector:
         return frameDiff, thresh, diffbox
 
     def reset_frame(self, frame):
+        "    重置基准帧\n\n    参数\n    ----------\n    frame : BGR格式的基准帧\n"
         #f = imutils.resize(frame, width=500)
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         self.comp_frame = cv2.GaussianBlur(f, (21, 21), 0)
@@ -87,6 +92,7 @@ class movementDetector:
 
 class poseDetector:
     def __init__(self):
+        "    使用姿态检测模型检测目标姿态\n"
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose(
             static_image_mode=False, model_complexity=2)
@@ -94,11 +100,13 @@ class poseDetector:
         self.interpreter.allocate_tensors()
 
     def detect(self, frame):
+        "    进行姿态检测\n\n    参数\n    ----------\n    frame : BGR格式的帧\n\n    返回\n    ----------\n    tuple(landmarks, connections)\n"
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.pose.process(frame)
         return results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS
 
     def pose_invoke(self, landmarks):
+        "    根据特征点进行姿态判断\n\n    返回\n    ----------\n    空ndarray : 处理出现问题或者没有输入landmark\n\n    ndarray[攀爬状态的概率，爬行状态的概率]\n"
         x = []
         try:
             for item in landmarks.landmark:

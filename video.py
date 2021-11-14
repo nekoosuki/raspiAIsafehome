@@ -10,6 +10,7 @@ class VideoCap:
               OBJ_IDX_OPENWINDOW: 'windowopen'}
 
     def __init__(self, w: int, h: int, url: str) -> None:
+        "视频源管理和绘图推流操作\n\n    参数\n    ----------\n    w : 画面的宽度，该参数在使用视频时无效\n\n    h : 画面的高度，该参数在使用视频时无效\n\n    url : rtmp推流地址\n"
         self.cap = cv2.VideoCapture('test_video.mp4')
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, w)
@@ -43,6 +44,7 @@ class VideoCap:
             command, shell=False, stdin=subprocess.PIPE)
 
     def read(self) -> np.ndarray:
+        "    从源读一帧数据，存入对象内部并返回\n\n    注意\n    ---------\n    该函数返回引用，对返回数组的操作会影响对象内部数据。如果不想影响，请使用VideoCap.read().copy()\n"
         succ, self.frame = self.cap.read()
         if succ:
             return self.frame
@@ -50,6 +52,7 @@ class VideoCap:
             return np.array([])
 
     def draw_bbox(self, pdt_l: list):
+        "    对对象存储的帧绘制带标签和置信度的 bbox\n\n    参数\n    ----------\n    pdt_l : [box[ymin, xmin, ymax, xmax], class, score] 组成的二维列表\n"
         for e in pdt_l:
             # e[0]:box[ymin,xmin,ymax,xmax]
             # e[1]:class
@@ -74,6 +77,7 @@ class VideoCap:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
 
     def draw_diffbox(self, diffbox: list):
+        "    对对象存储的帧绘制 bbox\n\n    参数\n    ----------\n    diffbox : [ymin, xmin, ymax, xmax] 组成的二维列表\n"
         text = 'static'
         for box in diffbox:
             ymin = box[0]
@@ -87,12 +91,19 @@ class VideoCap:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
     def draw_pose(self, landmarks, connections):
+        "    对对象存储的帧绘制 pose_landmark\n\n"
         mp_drawing = mp.solutions.drawing_utils
         mp_drawing.draw_landmarks(self.frame, landmarks, connections)
 
     def write(self, frame=None):
-        # 写到文件
+        "    将对象存储的帧或指定帧输出到视频文件\n\n    参数\n    ----------\n    frame : None 或 BGR格式的帧"
         if frame is None:
             self.out.write(self.frame)
         else:
             self.out.write(frame)
+
+    def release(self):
+        "    释放全部资源\n"
+        self.cap.release()
+        self.out.release()
+        self.pipe.terminate()
