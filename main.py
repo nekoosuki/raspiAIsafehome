@@ -1,4 +1,6 @@
 import threading
+
+from cv2 import BORDER_DEFAULT
 from video import *
 from detector import *
 import time
@@ -15,6 +17,8 @@ cap = VideoCap(720, 1080, '')
 obj = objDetector('windowmodel.tflite', 720, 1080, conf_thre=0.6)
 move = movementDetector(cap.read().copy())
 pose = poseDetector()
+sensor = Sensor(115200, '/dev/usbtty0')
+# sqlconn = SqlConn()
 
 warn = warning_gen(iou_thre=0.5)
 pose_thre = 0.5
@@ -59,6 +63,13 @@ def pose_f(f):
     return p, landmarks, connection
     # time.sleep(1)
 
+def sensor_f(rq:queue.Queue, dq:queue.Queue):
+    while True:
+        if rq.empty():
+            break
+        data = sensor.read()
+        dq.put(dp(data, DETECT_TYPE_SENSOR),block=True)
+        time.sleep(30)
 
 t_d1 = threading.Thread(target=obj_f, args=(rq, dq))
 t_d2 = threading.Thread(target=move_f, args=(rq, dq))
@@ -116,9 +127,10 @@ while True:
                 warn.update_move(None)
             # 更新窗户或运动物体时进行判断
             isdgrs = warn.close_window()
-        # else:
-        #    d[2] = package.load[0]
-        #    d[3] = package.load[1]
+        
+        elif TYPE == DETECT_TYPE_SENSOR:
+            print(package.load)
+            # sqlconn.update_sensor(package.load)
     if(isdgrs):
         # 运动物体靠近打开窗户时才进行姿态检测
         print('danger start pose')

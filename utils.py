@@ -1,6 +1,8 @@
 import numpy as np
 from constant import *
 import time
+import serial
+import pymysql
 
 
 class data_package:
@@ -88,3 +90,19 @@ class Counter:
     def end(self, label: str, useFPS: bool = True) -> str:
         "    返回距离调用start()的时间\n\n    参数\n    ----------\n    label : 计时器标签\n\n    useFPS : 如果为 True 以 FPS 格式返回，否则以秒格式返回\n\n    返回\n    ----------\n    描述计时结果的字符串\n\n    注意\n    ----------\n    调用这个方法不会重置计时器\n    要重置计时器，请重新调用start()\n"
         return '{}FPS:{}'.format(label, 1/(time.perf_counter()-self.timer[label])) if useFPS else '{}timing:{}'.format(label, time.perf_counter()-self.timer[label])
+
+class Sensor:
+    def __init__(self, baud, COM) -> None:
+        self.ser = serial.Serial(port = COM, baudrate = baud)
+
+    def read(self):
+        if self.ser.in_waiting:
+            return self.ser.read_all().decode().split(',')
+
+class SqlConn:
+    def __init__(self, URL, user, pswd, port, db):
+        self.SQL = pymysql.connect(host=URL, user=user, password=pswd, database=db, port=port)
+    
+    def update_sensor(self, data):
+        #TODO update sensor
+        pass
