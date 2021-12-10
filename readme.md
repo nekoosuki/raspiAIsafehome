@@ -17,6 +17,8 @@ mediapipe library
 多层感知机  
 keras on tensorflow
 * 儿童离开区域检测
-* 实时监控
+* 实时监控  
+rtmp
 * 温湿度检测
-* 烟雾检测
+* 烟雾检测  
+Bluetooth Serial from ESP32
