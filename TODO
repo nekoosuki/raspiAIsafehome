@@ -8,4 +8,4 @@ video函数没有必要在子线程 √
 
 传感器 √ not test
 
-connsql ...->
+connsql √
